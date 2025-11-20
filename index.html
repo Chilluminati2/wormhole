@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wormhole</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <!-- Circular Portal Container -->
+  <div id="portal-container">
+    <!-- Background canvas for effects -->
+    <canvas id="effects-canvas"></canvas>
+    
+    <!-- Video feed from peer -->
+    <video id="peer-video" autoplay playsinline></video>
+    
+    <!-- Local video preview (hidden by default) -->
+    <video id="local-video" autoplay muted playsinline style="display: none;"></video>
+    
+    <!-- Portal glow overlay -->
+    <div id="portal-glow"></div>
+    
+    <!-- Connection status overlay -->
+    <div id="status-overlay" class="show">
+      <div id="status-content">
+        <div id="status-icon">🌀</div>
+        <div id="status-text">Disconnected</div>
+        
+        <!-- Connection controls -->
+        <div id="connection-controls">
+          <button id="create-room-btn" class="btn-primary">Create Portal</button>
+          <div class="separator">or</div>
+          <div id="join-room-section">
+            <input type="text" id="room-code-input" placeholder="Enter code" maxlength="6">
+            <button id="join-room-btn" class="btn-secondary">Join Portal</button>
+          </div>
+        </div>
+        
+        <!-- Room code display (shown after creating room) -->
+        <div id="room-code-display" style="display: none;">
+          <div class="room-code-label">Your Portal Code:</div>
+          <div id="room-code" class="room-code"></div>
+          <div class="room-code-hint">Share this code with your friend</div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- File drop zone overlay -->
+    <div id="drop-zone" class="hidden">
+      <div id="drop-zone-content">
+        <div class="drop-icon">📁</div>
+        <div class="drop-text">Drop file into the portal</div>
+      </div>
+    </div>
+    
+    <!-- File transfer progress -->
+    <div id="transfer-progress" class="hidden">
+      <svg class="progress-ring" width="120" height="120">
+        <circle class="progress-ring-circle" cx="60" cy="60" r="54"></circle>
+      </svg>
+      <div id="progress-text">0%</div>
+      <div id="progress-label">Transferring...</div>
+    </div>
+    
+    <!-- File received notification -->
+    <div id="file-received" class="hidden">
+      <div class="file-icon">📄</div>
+      <div id="file-name">file.txt</div>
+      <div class="file-action">File received!</div>
+    </div>
+    
+    <!-- Settings button -->
+    <button id="settings-btn" class="icon-btn" title="Settings">⚙️</button>
+    
+    <!-- Close button -->
+    <button id="close-btn" class="icon-btn" title="Close">✕</button>
+  </div>
+
+  <!-- Scripts -->
+  <script src="src/effects.js"></script>
+  <script src="src/fileTransfer.js"></script>
+  <script src="src/webrtc.js"></script>
+  <script src="src/ui.js"></script>
+</body>
+</html>

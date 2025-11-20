@@ -1,0 +1,49 @@
+{
+    "name": "wormhole",
+    "version": "1.0.0",
+    "description": "A P2P desktop portal for video streaming and file transfer",
+    "main": "main.js",
+    "scripts": {
+        "start": "electron .",
+        "server": "node server.js",
+        "dev": "concurrently \"npm run server\" \"npm run start\"",
+        "build": "electron-builder --win --x64",
+        "build:dir": "electron-builder --win --x64 --dir"
+    },
+    "keywords": [
+        "electron",
+        "webrtc",
+        "p2p",
+        "file-transfer",
+        "video-chat"
+    ],
+    "author": "",
+    "license": "MIT",
+    "devDependencies": {
+        "concurrently": "^8.2.2",
+        "electron": "^28.0.0",
+        "electron-builder": "^24.13.3"
+    },
+    "dependencies": {
+        "ws": "^8.16.0"
+    },
+    "build": {
+        "appId": "com.wormhole.app",
+        "productName": "Wormhole",
+        "directories": {
+            "output": "dist"
+        },
+        "win": {
+            "target": "zip",
+            "sign": null
+        },
+        "files": [
+            "**/*",
+            "!**/*.md",
+            "!dist",
+            "!.gitignore",
+            "!node_modules/electron-builder",
+            "!.git"
+        ]
+    }
+}
