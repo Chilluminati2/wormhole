@@ -1,12 +1,30 @@
 const WebSocket = require('ws');
+const http = require('http');
 
 const PORT = process.env.PORT || 3000;
-const wss = new WebSocket.Server({ port: PORT });
 
 // Store active rooms: roomCode -> { peer1: ws, peer2: ws }
 const rooms = new Map();
 
-console.log(`🌀 Wormhole Signaling Server running on port ${PORT}`);
+// Create HTTP server first
+const server = http.createServer((req, res) => {
+    if (req.url === '/health') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({
+            status: 'healthy',
+            activeRooms: rooms.size,
+            uptime: process.uptime()
+        }));
+    } else {
+        res.writeHead(200, { 'Content-Type': 'text/plain' });
+        res.end('Wormhole Signaling Server is running');
+    }
+});
+
+// Create WebSocket server attached to HTTP server (not a separate port)
+const wss = new WebSocket.Server({ noServer: true });
+
+console.log(`🌀 Wormhole Signaling Server starting on port ${PORT}`);
 
 wss.on('connection', (ws) => {
     console.log('✓ New client connected');
@@ -22,7 +40,6 @@ wss.on('connection', (ws) => {
 
     ws.on('close', () => {
         console.log('✗ Client disconnected');
-        // Clean up rooms when a peer disconnects
         removeFromRooms(ws);
     });
 
@@ -46,7 +63,6 @@ function handleMessage(ws, data) {
         case 'offer':
         case 'answer':
         case 'ice-candidate':
-            // Forward signaling messages to the other peer in the room
             forwardToPeer(ws, roomCode, { type, payload });
             break;
 
@@ -83,7 +99,6 @@ function joinRoom(ws, roomCode) {
     room.peer2 = ws;
     ws.roomCode = roomCode;
 
-    // Notify both peers that they're connected
     room.peer1.send(JSON.stringify({ type: 'peer-joined' }));
     ws.send(JSON.stringify({ type: 'room-joined', roomCode }));
     console.log(`🔗 Peer joined room: ${roomCode}`);
@@ -93,7 +108,6 @@ function forwardToPeer(ws, roomCode, message) {
     const room = rooms.get(roomCode);
     if (!room) return;
 
-    // Determine which peer is sending and forward to the other
     const targetPeer = room.peer1 === ws ? room.peer2 : room.peer1;
 
     if (targetPeer && targetPeer.readyState === WebSocket.OPEN) {
@@ -107,40 +121,23 @@ function removeFromRooms(ws) {
     const room = rooms.get(ws.roomCode);
     if (!room) return;
 
-    // Notify the other peer if there is one
     const otherPeer = room.peer1 === ws ? room.peer2 : room.peer1;
     if (otherPeer && otherPeer.readyState === WebSocket.OPEN) {
         otherPeer.send(JSON.stringify({ type: 'peer-disconnected' }));
     }
 
-    // Remove the room
     rooms.delete(ws.roomCode);
     console.log(`🗑️  Room deleted: ${ws.roomCode}`);
 }
 
-// Health check endpoint for Render
-const http = require('http');
-const server = http.createServer((req, res) => {
-    if (req.url === '/health') {
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        res.end(JSON.stringify({
-            status: 'healthy',
-            activeRooms: rooms.size,
-            uptime: process.uptime()
-        }));
-    } else {
-        res.writeHead(200, { 'Content-Type': 'text/plain' });
-        res.end('Wormhole Signaling Server is running');
-    }
-});
-
-// Upgrade HTTP server to handle WebSocket connections
+// Upgrade HTTP connections to WebSocket
 server.on('upgrade', (request, socket, head) => {
     wss.handleUpgrade(request, socket, head, (ws) => {
         wss.emit('connection', ws, request);
     });
 });
 
+// Start server
 server.listen(PORT, () => {
     console.log(`📡 HTTP/WebSocket server listening on port ${PORT}`);
 });

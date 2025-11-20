@@ -16,7 +16,7 @@ class WebRTCConnection {
             ]
         };
 
-        this.signalingServerUrl = 'ws://localhost:3000';
+        this.signalingServerUrl = 'wss://wormhole-server-x5mv.onrender.com';
     }
 
     // Connect to signaling server
